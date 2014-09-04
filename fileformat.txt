@@ -1,0 +1,15 @@
+NM database file format:
+------------------------
+char[4] magic = "NMDB"
+u8 version = 1
+repeat {
+	s16 x
+	s16 z
+	s16 y
+	u16 player id
+}
+
+* everything little endian
+* s16's are serialized like this:
+* 	write_u16(value + 32768)
+* the player id corresponds to the player listed on that line in nm_players.db (counting from 0)
