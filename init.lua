@@ -144,7 +144,7 @@ local function nm_db_index()
 		f:write("NMDB") -- char[4] magic value
 		f:write(string.char(1)) -- u8 version
 		f:close()
-		nm.info = "Fresh database was created"
+		nm.info = "0s, fresh database was created"
 		return
 	end
 	local m = f:read(4)
