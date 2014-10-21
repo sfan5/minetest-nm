@@ -86,7 +86,7 @@ local function hash_node_pos(x, y, z)
 	else
 		return (x + 32768) + ((y + 32768) * (2 ^ 16)) + ((z + 32768) * (2 ^ 32))
 	end
-	
+
 end
 
 local function player_db_load()
@@ -181,7 +181,7 @@ local function nm_db_index()
 	seen = nil
 	local eclock = os.clock()
 	local etime = os.time()
-	nm.info = string.format("%ds(%.2fs CPU time), %d(%.2f%% outdated entries), %d total entries",
+	nm.info = string.format("%ds(%.2fs CPU time), %d(%.2f%%) outdated entries, %d total entries",
 		os.difftime(etime, stime), eclock - sclock, #nm.overwrite_cache, (#nm.overwrite_cache / i) * 100, i)
 	minetest.log("action", "[NM] Read NM database in " .. nm.info)
 end
@@ -419,12 +419,11 @@ minetest.register_chatcommand("nm", {
 		y = tonumber(y)
 		z = tonumber(z)
 		if x == nil or y == nil or z == nil then
-			minetest.chat_send_player(name, "Invalid coordinates.")
-			return
+			return false, "Invalid coordinates."
 		end
 		local pname = get_node_modify({x=x, y=y, z=z})
 		local ps = minetest.pos_to_string({x=x, y=y, z=z})
-		minetest.chat_send_player(name, get_node_ret2human(pname, ps))
+		return true, get_node_ret2human(pname, ps)
 	end,
 })
 
@@ -436,8 +435,7 @@ minetest.register_chatcommand("nm_inspect", {
 		if nm.inspect_mode[name] then
 			nm.inspect_mode[name] = false
 			if #nm.inspect_query[name] == 0 then
-				minetest.chat_send_player(name, "Inspection mode disabled.")
-				return
+				return true, "Inspection mode disabled."
 			end
 			minetest.chat_send_player(name, "Inspection mode disabled, executing search.")
 			local res = get_node_modify_multiple(nm.inspect_query[name])
@@ -450,7 +448,7 @@ minetest.register_chatcommand("nm_inspect", {
 		else
 			nm.inspect_mode[name] = true
 			nm.inspect_query[name] = {}
-			minetest.chat_send_player(name, "Inspection mode enabled.")
+			return true, "Inspection mode enabled."
 		end
 	end,
 })
@@ -468,9 +466,9 @@ minetest.register_chatcommand("nm_info", {
 	description = "Get information about NM database & configuration",
 	privs = {basic_privs=true},
 	func = function(name, param)
-		minetest.chat_send_player(name, string.format("Info: Database was read in %s, "
-			.. "%d outdated entries queued for overwriting, %d unsaved changes", nm.info, #nm.overwrite_cache, #nm.write_cache))
-		local cfg = string.format("Write cache size: %d, Write cache timeout: %ds, Libraries -> bit: ",
+		local a = string.format("Info: Database was read in %s, "
+			.. "%d outdated entries queued for overwriting, %d unsaved changes", nm.info, #nm.overwrite_cache, #nm.write_cache)
+		local cfg = a .. "\n" .. string.format("Configuration: Write cache size: %d, Write cache timeout: %ds, Libraries -> bit: ",
 			nm.write_cache_thresh, nm.write_cache_timeout)
 		if bit then
 			cfg = cfg .. "available (big numbers: "
@@ -495,7 +493,7 @@ minetest.register_chatcommand("nm_info", {
 		else
 			cfg = cfg .. "unavailable"
 		end
-		minetest.chat_send_player(name, "Config Info: " .. cfg)
+		return true, cfg
 	end,
 })
 
@@ -506,7 +504,7 @@ minetest.register_chatcommand("nm_reindex", {
 	func = function(name, param)
 		clean_write_cache()
 		nm_db_index()
-		minetest.chat_send_player(name, "Read database in " .. nm.info)
+		return true, "Read database in " .. nm.info
 	end,
 })
 
